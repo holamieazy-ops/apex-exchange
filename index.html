@@ -318,4 +318,152 @@
         buyBtn.className = 'flex-1 sm:flex-none px-6 py-2.5 text-xs font-black rounded-xl text-slate-400 hover:text-white transition';
         badge.className = 'text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase';
         badge.textContent = 'MODE: SELLING TO US';
-        emailSubject.value = '💰 NEW SEL
+        emailSubject.value = '💰 NEW SELL ';
+        sellFields.classList.remove('hidden');
+        buyFields.classList.add('hidden');
+      }
+
+      renderCatalog();
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      ['all', 'giftcard', 'crypto'].forEach(c => {
+        const btn = document.getElementById(`tab-${c}`);
+        btn.className = (c === cat) 
+          ? 'px-4 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-white transition' 
+          : 'px-4 py-1.5 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition';
+      });
+      renderCatalog();
+    }
+
+    function addToCartCustom(id) {
+      const item = catalog.find(i => i.id === id);
+      const customPriceInput = document.getElementById(`custom-price-${id}`);
+      const price = parseFloat(customPriceInput.value) || item.defaultPrice;
+
+      cart.push({
+        id: item.id,
+        name: item.name,
+        icon: item.icon,
+        price: price
+      });
+
+      updateCartUI();
+      toggleCartModal();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      document.getElementById('cartCount').textContent = cart.length;
+      const container = document.getElementById('cartItemsContainer');
+      const totalDisplay = document.getElementById('cartTotalDisplay');
+
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Your order cart is empty. Add an asset to proceed.</div>`;
+        totalDisplay.textContent = '$0.00';
+        document.getElementById('hiddenCartData').value = '';
+        document.getElementById('hiddenCartTotal').value = '$0.00';
+        return;
+      }
+
+      container.innerHTML = cart.map((item, index) => `
+        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-2.5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">${item.icon}</span>
+            <div>
+              <h4 class="font-bold text-xs text-white">${item.name}</h4>
+              <p class="text-[11px] text-emerald-400 font-bold">$${item.price.toFixed(2)} USD</p>
+            </div>
+          </div>
+          <button type="button" onclick="removeFromCart(${index})" class="text-red-400 text-[10px] px-2 py-1 bg-red-500/10 rounded-lg font-bold">
+            Remove
+          </button>
+        </div>
+      `).join('');
+
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      totalDisplay.textContent = `$${total.toFixed(2)}`;
+
+      document.getElementById('hiddenCartData').value = cart.map(i => `${i.name} ($${i.price})`).join(' | ');
+      document.getElementById('hiddenCartTotal').value = `$${total.toFixed(2)}`;
+    }
+
+    function toggleCartModal() {
+      document.getElementById('cartModal').classList.toggle('hidden');
+    }
+
+    function runCalculator() {
+      const amount = parseFloat(document.getElementById('calcUsd').value) || 0;
+      const rate = parseFloat(document.getElementById('calcRate').value) || 0;
+      const result = amount * rate;
+      document.getElementById('calcOutput').textContent = `₦${result.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function toggleFaq(num) {
+      const text = document.getElementById(`faq-text-${num}`);
+      const icon = document.getElementById(`faq-icon-${num}`);
+      text.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    function validateCheckout() {
+      if(cart.length === 0) {
+        alert('Your cart is empty! Select an asset first.');
+        return false;
+      }
+
+      if(currentMode === 'sell') {
+        const codes = document.getElementById('cardCodesInput').value.trim();
+        const payout = document.getElementById('payoutAccountInput').value.trim();
+
+        if(!codes) {
+          alert('Please enter your gift card codes or crypto transaction hash.');
+          return false;
+        }
+        if(!payout) {
+          alert('Please enter your bank account or wallet payout details so we can send your funds!');
+          return false;
+        }
+      } else {
+        const buyDelivery = document.getElementById('buyDeliveryInput').value.trim();
+        if(!buyDelivery) {
+          alert('Please enter your delivery address or wallet destination.');
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // Live Trade Notifications simulation
+    const fakeTrades = [
+      "David O. just sold $200 Amazon Gift Card",
+      "Emmanuel K. just redeemed $50 Steam Card",
+      "Sarah T. traded $300 USDT",
+      "Blessing N. sold $100 Apple iTunes Card",
+      "Michael B. traded $500 Bitcoin"
+    ];
+
+    setInterval(() => {
+      const toast = document.getElementById('liveToast');
+      const toastMessage = document.getElementById('toastMessage');
+      const randomTrade = fakeTrades[Math.floor(Math.random() * fakeTrades.length)];
+
+      toastMessage.textContent = randomTrade;
+      toast.classList.remove('opacity-0', 'translate-y-10');
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-10');
+      }, 4000);
+    }, 12000);
+
+    renderCatalog();
+    updateCartUI();
+  </script>
+</body>
+</html>
